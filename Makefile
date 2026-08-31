@@ -33,3 +33,16 @@ venv: ## build .venv
 	uv venv --python 3.11
 	uv pip install pyspark==3.5.1 kafka-python-ng faker numpy pandas psycopg2-binary \
 	  python-dotenv pytest ruff dbt-core "dbt-spark[session]>=1.8"
+
+.PHONY: seed lint test
+
+# simulator / kafka
+seed: ## master data into postgres
+	$(PY) -m sim.seed
+
+#  tests
+lint: ## ruff
+	.venv/bin/ruff check .
+
+test: lint ## ruff + pytest
+	.venv/bin/pytest -q
