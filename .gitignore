@@ -6,6 +6,9 @@ __pycache__/
 *.pyc
 .venv/
 
+# postgres + kafka bind mounts
+data/
+
 # macos
 .DS_Store
 
