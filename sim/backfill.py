@@ -1,4 +1,4 @@
-"""replay months of history through kafka 
+"""replay months of history through kafka
 """
 
 from __future__ import annotations
@@ -51,7 +51,7 @@ def run_day(ctx: SimContext, rng: np.random.Generator, producer, d: date,
         c_online.add(len(lines))
         n_events += 1
 
-    # POS: per store, till times 08-22, flush batches with delay 
+    # POS: per store, till times 08-22, flush batches with delay
     base_shoppers = float(os.getenv("SHOPPERS_PER_STORE_DAY", "150"))
     open_s, close_s = STORE_OPEN_H * 3600, STORE_CLOSE_H * 3600
     for store_id in ctx.stores.store_id:

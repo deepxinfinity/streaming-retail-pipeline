@@ -1,15 +1,5 @@
-"""kafka producer setup, plus a tally of what we send.
-
-each producer keeps a running count and appends a line to logs/emit_log.jsonl
-as it goes. sum that file and you know exactly what left the simulator:
-
-  events  messages sent
-  lines   sale lines inside them - one basket holds several
-  dupes   deliberate re-sends, kept separate so they don't inflate events
-
-later, once this data has landed in a table somewhere, that sum is what you
-check the table against. without it there is no way to tell a message that got
-dropped from one that was never sent in the first place.
+"""kafka producer setup, plus a tally of what we send. sum
+logs/emit_log.jsonl to check later that nothing was lost or double-counted.
 """
 
 from __future__ import annotations
@@ -21,16 +11,15 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 from kafka import KafkaProducer
+from datetime import UTC, datetime
 
+def utc_now_iso() -> str:
+    return datetime.now(UTC).isoformat()
 load_dotenv()
 
 TOPIC_ONLINE = os.getenv("TOPIC_ONLINE", "online_orders")
 TOPIC_POS = os.getenv("TOPIC_POS", "store_pos")
 EMIT_LOG = Path("logs/emit_log.jsonl")
-
-
-def utc_now_iso() -> str:
-    return datetime.now().isoformat()
 
 
 def make_producer() -> KafkaProducer:
@@ -44,7 +33,8 @@ def make_producer() -> KafkaProducer:
 
 
 class EmitCounter:
-    """counts what one topic sent, writes a row on flush and resets."""
+    """per-topic counts: events sent, sale lines inside them, and deliberate
+    re-sends kept separate so they don't inflate events."""
 
     def __init__(self, topic: str) -> None:
         self.topic = topic

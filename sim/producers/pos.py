@@ -1,4 +1,9 @@
+"""fake store till: rings a sale up at pos_ts, uploads it minutes to hours
+later at sent_ts, and re-sends ~1% of batches with the same event_ids.
+"""
+
 from __future__ import annotations
+
 import os
 import time
 import uuid
