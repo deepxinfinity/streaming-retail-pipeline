@@ -19,8 +19,8 @@ def main():
     for topic, t in sorted(totals.items()):
         print(f"{topic:15s} events={t['events']:>10,} lines={t['lines']:>10,} dupes={t['dupes']:>6,}")
     print("\n expetcations:")
-    print("  bronze row count== events + dupes (bronze keeps everything)")
-    print("  silver distinct id == lines (MERGE deduped)")
+    print("  bronze row count == events + dupes      (bronze keeps everything)")
+    print("  silver distinct id == lines                 (MERGE deduped)")
 
 
 if __name__ == "__main__":
