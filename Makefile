@@ -62,3 +62,12 @@ produce: # run both live producers
 
 backfill: # replay M months of history through Kafka likre make backfill M=1
 	BACKFILL_MONTHS=$(M) $(PY) -m sim.backfill
+
+.PHONY: ddl
+
+#  spark jobs pick up docker/spark-defaults.conf from here
+export SPARK_CONF_DIR := $(PWD)/docker
+
+# iceberg + streaming
+ddl: 
+	$(PY) lakehouse/ddl/create_tables.py
