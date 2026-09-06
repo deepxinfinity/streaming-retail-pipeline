@@ -6,20 +6,21 @@ from __future__ import annotations
 
 import json
 import os
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 
 from dotenv import load_dotenv
 from kafka import KafkaProducer
-from datetime import UTC, datetime
 
-def utc_now_iso() -> str:
-    return datetime.now(UTC).isoformat()
 load_dotenv()
 
 TOPIC_ONLINE = os.getenv("TOPIC_ONLINE", "online_orders")
 TOPIC_POS = os.getenv("TOPIC_POS", "store_pos")
 EMIT_LOG = Path("logs/emit_log.jsonl")
+
+
+def utc_now_iso() -> str:
+    return datetime.now(UTC).isoformat()
 
 
 def make_producer() -> KafkaProducer:

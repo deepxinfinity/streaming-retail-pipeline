@@ -78,7 +78,7 @@ def start_bronze(spark: SparkSession, topic: str, schema: StructType, table: str
             F.col("value").cast("string").alias("_raw"),
             F.from_json(F.col("value").cast("string"), schema).alias("e"),
             F.col("topic").alias("_topic"),
-            F.col("partition").alias("_partition"),
+            F.col("partition").alias("source_partition"),
             F.col("offset").alias("_offset"),
             F.col("timestamp").alias("_kafka_ts"),
         )
@@ -89,7 +89,7 @@ def start_bronze(spark: SparkSession, topic: str, schema: StructType, table: str
 
     good = (
         parsed.where(ok)
-        .select("e.*", "_topic", "_partition", "_offset", "_kafka_ts")
+        .select("e.*", "_topic", "source_partition", "_offset", "_kafka_ts")
         .withColumn("_ingest_ts", F.current_timestamp())
         .writeStream.format("iceberg")
         .outputMode("append")
@@ -104,7 +104,7 @@ def start_bronze(spark: SparkSession, topic: str, schema: StructType, table: str
             F.to_json(F.struct(
                 F.col("_raw").alias("raw"),
                 F.col("_topic").alias("source_topic"),
-                F.col("_partition").alias("source_partition"),
+                F.col("source_partition"),
                 F.col("_offset").alias("source_offset"),
                 F.current_timestamp().cast("string").alias("dlq_ts"),
             )).alias("value")

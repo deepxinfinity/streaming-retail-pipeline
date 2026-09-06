@@ -20,7 +20,10 @@ from __future__ import annotations
 import argparse
 from datetime import date
 
+from dotenv import load_dotenv
 from pyspark.sql import SparkSession
+
+load_dotenv()
 
 TRACKED = ["sku_name", "department", "category_id", "category_name",
            "brand", "base_price", "unit_cost", "active"]
