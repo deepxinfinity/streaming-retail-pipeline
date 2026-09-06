@@ -21,3 +21,7 @@ sim/params.json
 
 # producer emit counts
 logs/
+
+# streaming checkpoints
+chk/
+*.parquet

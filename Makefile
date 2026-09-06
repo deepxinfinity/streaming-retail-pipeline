@@ -71,3 +71,21 @@ export SPARK_CONF_DIR := $(PWD)/docker
 # iceberg + streaming
 ddl: 
 	$(PY) lakehouse/ddl/create_tables.py
+
+.PHONY: bronze silver stream dims maintenance
+
+bronze: ## run Kafka -> bronze streaming job (foreground)
+	$(PY) ingestion/stream_bronze.py
+
+silver: ## run bronze -> silver merge streaming job (foreground)
+	$(PY) ingestion/stream_silver_sales.py
+
+stream: ## run both streaming jobs as containers (docker profile "stream")
+	$(COMPOSE) --profile stream up -d --build streamer-bronze streamer-silver
+
+dims: ## snapshot Postgres dims -> bronze, build silver SCD dims + price_history
+	$(PY) ingestion/extract_dims.py
+	$(PY) ingestion/build_silver_dims.py
+
+maintenance: ## compact data files + expire snapshots
+	$(PY) lakehouse/maintenance.py --full

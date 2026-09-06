@@ -123,3 +123,50 @@ services:
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-minio}
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-minio12345}
       AWS_REGION: ${AWS_REGION:-us-east-1}
+
+  # streaming jobs as containers (profile: stream)
+  streamer-bronze:
+    build:
+      context: ..
+      dockerfile: docker/streamer.Dockerfile
+    container_name: rl-streamer-bronze
+    profiles: ["stream"]
+    depends_on:
+      kafka:
+        condition: service_healthy
+      iceberg-rest:
+        condition: service_started
+    command: python ingestion/stream_bronze.py
+    working_dir: /repo
+    environment:
+      KAFKA_BOOTSTRAP: kafka:29092
+      CHECKPOINT_DIR: /repo/chk
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-minio}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-minio12345}
+      AWS_REGION: ${AWS_REGION:-us-east-1}
+    volumes:
+      - ..:/repo
+      - ../data/ivy:/root/.ivy2
+    mem_limit: 3g
+    restart: unless-stopped
+  streamer-silver:
+    build:
+      context: ..
+      dockerfile: docker/streamer.Dockerfile
+    container_name: rl-streamer-silver
+    profiles: ["stream"]
+    depends_on:
+      iceberg-rest:
+        condition: service_started
+    command: python ingestion/stream_silver_sales.py
+    working_dir: /repo
+    environment:
+      CHECKPOINT_DIR: /repo/chk
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-minio}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-minio12345}
+      AWS_REGION: ${AWS_REGION:-us-east-1}
+    volumes:
+      - ..:/repo
+      - ../data/ivy:/root/.ivy2
+    mem_limit: 3g
+    restart: unless-stopped
