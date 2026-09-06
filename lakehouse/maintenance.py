@@ -5,8 +5,12 @@ run weekly, both scheduled from dags.
 """
 
 import argparse
+from datetime import UTC, datetime, timedelta
 
+from dotenv import load_dotenv
 from pyspark.sql import SparkSession
+
+load_dotenv()
 
 TABLES = [
     "lake.bronze.online_orders",
@@ -15,9 +19,15 @@ TABLES = [
 ]
 
 TARGET_FILE_SIZE = 134_217_728  # 128 MB
+RETAIN_DAYS = 7
 
 # TODO gold tables aren't in here yet, dbt rebuilds them as full tables so it
 # hasn't mattered. will need it maybe once agg_sku_store_day goes incremental
+
+
+def cutoff_ts() -> str:
+    """iceberg's CALL parser only takes literals, so build the timestamp here."""
+    return (datetime.now(UTC) - timedelta(days=RETAIN_DAYS)).strftime("%Y-%m-%d %H:%M:%S")
 
 
 def compact(spark: SparkSession, table: str) -> None:
@@ -35,17 +45,17 @@ def expire_snapshots(spark: SparkSession, table: str) -> None:
     spark.sql(f"""
         CALL lake.system.expire_snapshots(
           table => '{table}',
-          older_than => TIMESTAMPADD(DAY, -7, current_timestamp()),
+          older_than => TIMESTAMP '{cutoff_ts()}',
           retain_last => 5)
     """)
-    print(f"{table}: snapshots expired (>7d, kept last 5)")
+    print(f"{table}: snapshots expired (>{RETAIN_DAYS}d, kept last 5)")
 
 
 def remove_orphans(spark: SparkSession, table: str) -> None:
     res = spark.sql(f"""
         CALL lake.system.remove_orphan_files(
           table => '{table}',
-          older_than => TIMESTAMPADD(DAY, -7, current_timestamp()))
+          older_than => TIMESTAMP '{cutoff_ts()}')
     """).collect()
     print(f"{table}: {len(res)} orphan files removed")
 

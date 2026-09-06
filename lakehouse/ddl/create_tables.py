@@ -3,7 +3,10 @@
 all CREATE IF NOT EXISTS, safe to re-run.
 """
 
+from dotenv import load_dotenv
 from pyspark.sql import SparkSession
+
+load_dotenv()
 
 LINES_STRUCT = (
     "array<struct<line_no:int,sku_id:string,qty:int,unit_price:double,promo_id:string>>"
