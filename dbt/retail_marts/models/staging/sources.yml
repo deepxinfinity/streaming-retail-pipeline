@@ -1,0 +1,19 @@
+version: 2
+
+sources:
+  - name: silver
+    description: Deduped, conformed layer built by Spark Structured Streaming + batch dims.
+    schema: silver
+    tables:
+      - name: sales_lines
+        description: One row per sale line, MERGE-deduped on sale_line_id. Late POS rows land here whenever they arrive.
+        loaded_at_field: arrived_ts
+        freshness:
+          warn_after: {count: 2, period: hour}
+          error_after: {count: 24, period: hour}
+      - name: dim_products
+        description: SCD2 product dimension (valid_from/valid_to/is_current).
+      - name: dim_stores
+      - name: dim_customers
+      - name: price_history
+        description: List-price validity windows derived with LEAD(effective_from).

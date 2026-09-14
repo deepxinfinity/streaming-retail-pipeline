@@ -1,0 +1,76 @@
+version: 2
+
+models:
+  - name: dim_date
+    description: "Grain: one row per calendar day, 2024-01-01 -> today + 1y."
+    columns:
+      - name: date_day
+        tests: [unique, not_null]
+
+  - name: dim_product
+    description: "Grain: one row per SKU version (SCD2). Facts join on sku_id + as-of date."
+    columns:
+      - name: product_key
+        tests: [unique, not_null]
+      - name: sku_id
+        tests: [not_null]
+
+  - name: dim_store
+    description: "Grain: one row per store (SCD1)."
+    columns:
+      - name: store_key
+        tests: [unique, not_null]
+
+  - name: dim_customer
+    description: "Grain: one row per customer (SCD1)."
+    columns:
+      - name: customer_key
+        tests: [unique, not_null]
+
+  - name: fct_sales
+    description: >
+      Grain: one row per sale line. margin_amount uses the SCD2 as-of unit_cost  -
+      the cost that was true at sale time, not today's.
+    columns:
+      - name: sale_line_id
+        tests: [unique, not_null]
+      - name: channel
+        tests:
+          - accepted_values:
+              values: ["online", "store"]
+      - name: product_key
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_product')
+              field: product_key
+      - name: store_key
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_store')
+              field: store_key
+      - name: date_key
+        tests: [not_null]
+
+  - name: agg_sku_store_day
+    description: "Grain: one row per sku x store x day with at least one sale."
+    tests:
+      - dbt_unique_combo:
+          combo: ["sku_id", "store_id", "date_day"]
+    columns:
+      - name: units
+        tests: [not_null]
+
+  - name: ml_features_price_demand
+    description: >
+      Grain: one row per sku x store x day, model-ready. All lag windows end at
+      d-1 (leakage guard); first 28 warm-up days filtered out.
+    tests:
+      - dbt_unique_combo:
+          combo: ["sku_id", "store_id", "date_day"]
+    columns:
+      - name: rel_price
+        tests: [not_null]
+      - name: units
+        tests: [not_null]

@@ -1,0 +1,8 @@
+retail_marts:
+  target: dev
+  outputs:
+    dev:
+      type: spark
+      method: session
+      schema: gold
+      host: NA

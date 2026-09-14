@@ -25,3 +25,7 @@ logs/
 # streaming checkpoints
 chk/
 *.parquet
+
+# dbt
+dbt/retail_marts/target/
+dbt/retail_marts/dbt_packages/

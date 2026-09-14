@@ -1,0 +1,26 @@
+name: retail_marts
+version: "1.0.0"
+profile: retail_marts
+
+model-paths: ["models"]
+seed-paths: ["seeds"]
+test-paths: ["tests"]
+macro-paths: ["macros"]
+
+models:
+  retail_marts:
+    staging:
+      +materialized: view
+      +schema: staging
+    marts:
+      +materialized: table
+      +schema: gold
+      +file_format: iceberg
+
+seeds:
+  retail_marts:
+    +schema: gold
+    holidays:
+      +column_types:
+        holiday_date: date
+        holiday_name: string

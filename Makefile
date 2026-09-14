@@ -89,3 +89,13 @@ dims: ## snapshot Postgres dims -> bronze, build silver SCD dims + price_history
 
 maintenance: ## compact data files + expire snapshots
 	$(PY) lakehouse/maintenance.py --full
+
+.PHONY: dbt dbt-docs
+
+#  dbt
+dbt: ## dbt build (models + tests) for the gold layer
+	cd dbt/retail_marts && ../../.venv/bin/dbt build --profiles-dir .
+
+dbt-docs: 
+	cd dbt/retail_marts && ../../.venv/bin/dbt docs generate --profiles-dir . && \
+	  ../../.venv/bin/dbt docs serve --profiles-dir . --port 8087
