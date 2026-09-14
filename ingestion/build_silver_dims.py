@@ -39,6 +39,12 @@ def latest_snapshot(spark: SparkSession, table: str, snapshot_date: date):
 
 def build_products_scd2(spark: SparkSession, snapshot_date: date) -> None:
     hash_expr = f"sha2(concat_ws('||', {', '.join(TRACKED)}), 256)"
+    # on the very first load every product gets backdated, because the facts are
+    # older than the day we first looked at postgres. dating them from today
+    # would leave every backfilled sale with nothing to join to. after that,
+    # snapshot_date is right - a new row then really is a change seen that day.
+    first_load = spark.sql("SELECT count(*) c FROM lake.silver.dim_products").collect()[0].c == 0
+    valid_from = "date'1900-01-01'" if first_load else f"date'{snapshot_date}'"
     latest_snapshot(spark, "lake.bronze.pg_products", snapshot_date) \
         .createOrReplaceTempView("snap_products")
     spark.sql(f"""
@@ -60,7 +66,7 @@ def build_products_scd2(spark: SparkSession, snapshot_date: date) -> None:
     # 2) insert a fresh current version for new SKUs and just-closed ones
     spark.sql(f"""
         INSERT INTO lake.silver.dim_products
-        SELECT s.*, date'{snapshot_date}' AS valid_from, CAST(NULL AS date) AS valid_to,
+        SELECT s.*, {valid_from} AS valid_from, CAST(NULL AS date) AS valid_to,
                true AS is_current
         FROM staged_products s
         LEFT ANTI JOIN (SELECT sku_id FROM lake.silver.dim_products WHERE is_current) c
