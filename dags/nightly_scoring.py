@@ -1,5 +1,4 @@
 """03:30 UTC - load the champion model, run the optimizer, write recs to gold.
-
 drift report only runs when DRIFT_ENABLED=1 is set in the airflow env.
 """
 

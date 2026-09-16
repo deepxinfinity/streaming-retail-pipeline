@@ -1,7 +1,6 @@
 """manually triggered replay of [start, end) through kafka.
 
-safe to re-run a window, the silver merge absorbs the duplicates. never
-hand-delete a checkpoint to "reset" - that is how dupes get in.
+safe to re-run a window, the silver merge absorbs the duplicates.
 """
 
 import pendulum

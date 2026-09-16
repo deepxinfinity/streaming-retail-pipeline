@@ -1,10 +1,6 @@
 """02:00 UTC - dims snapshot, silver scds, dbt build, reconcile, light maintenance.
-
 dbt tests + reconcile sit between silver and gold, so a bad day of data fails
 the run instead of quietly landing in the dashboards.
-
-no spark session at import time. the scheduler re-parses this file constantly,
-sessions go inside the task callables.
 """
 
 from datetime import timedelta
@@ -13,10 +9,6 @@ import pendulum
 from airflow import DAG
 from airflow.providers.standard.operators.bash import BashOperator
 from airflow.providers.standard.operators.python import PythonOperator
-from pyspark.sql import SparkSession
-
-REPO = "/opt/airflow/repo"
-SPARK = SparkSession.builder.appName("daily_dims").getOrCreate()
 
 default_args = {
     "owner": "lakehouse",
@@ -27,6 +19,11 @@ default_args = {
 
 def reconcile() -> None:
     """fail loudly if gold drifted from silver, counts and amounts must match."""
+    from pyspark.sql import SparkSession
+
+    REPO = "/opt/airflow/repo"
+    SPARK = SparkSession.builder.appName("daily_dims").getOrCreate()
+
     spark = SPARK
     try:
         silver = spark.sql(
