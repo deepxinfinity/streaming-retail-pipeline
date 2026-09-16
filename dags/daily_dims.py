@@ -15,13 +15,13 @@ default_args = {
     "retries": 2,
     "retry_delay": timedelta(minutes=5),
 }
-
+REPO = "/opt/airflow/repo"
 
 def reconcile() -> None:
     """fail loudly if gold drifted from silver, counts and amounts must match."""
     from pyspark.sql import SparkSession
 
-    REPO = "/opt/airflow/repo"
+    
     SPARK = SparkSession.builder.appName("daily_dims").getOrCreate()
 
     spark = SPARK
