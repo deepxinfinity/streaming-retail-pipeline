@@ -1,0 +1,8 @@
+# minimal deps for CI: lint, unit tests (pure-python + numpy), dbt compile
+ruff
+pytest
+numpy
+pandas
+python-dotenv
+dbt-core>=1.8
+dbt-spark[session]>=1.8

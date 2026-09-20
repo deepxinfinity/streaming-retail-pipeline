@@ -1,0 +1,33 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  lint-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install deps
+        run: pip install -r requirements-ci.txt
+      - name: Ruff
+        run: ruff check .
+      - name: Unit tests
+        run: pytest -q
+      - name: dbt parse (compile-only; no cluster in CI)
+        working-directory: dbt/retail_marts
+        run: |
+          dbt deps --profiles-dir .
+          dbt parse --profiles-dir .
+
+  docker-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Airflow image
+        run: docker build -f docker/airflow.Dockerfile .
