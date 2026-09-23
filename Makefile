@@ -99,3 +99,32 @@ dbt: ## dbt build (models + tests) for the gold layer
 dbt-docs: 
 	cd dbt/retail_marts && ../../.venv/bin/dbt docs generate --profiles-dir . && \
 	  ../../.venv/bin/dbt docs serve --profiles-dir . --port 8087
+
+.PHONY: venv-ml backtest train elasticity score app api loadtest
+
+venv-ml: ## add the ml + app deps (lightgbm, mlflow, streamlit)
+	uv pip install lightgbm scikit-learn mlflow==2.14.1 evidently streamlit fastapi uvicorn \
+	  matplotlib duckdb
+
+# ---- ml
+backtest: ## rolling-origin backtest vs baselines (logs to MLflow)
+	$(PY) -m ml.backtest
+
+train: ## train + register the LightGBM demand model
+	$(PY) -m ml.train
+
+elasticity: ## recover elasticities, plot true-vs-recovered
+	$(PY) -m ml.elasticity
+
+score: ## nightly optimizer: write gold.ml_price_recommendations
+	$(PY) -m ml.optimize
+
+app: ## Streamlit what-if + recommendations UI
+	.venv/bin/streamlit run app/streamlit_app.py
+
+api: ## optional FastAPI /whatif service
+	.venv/bin/uvicorn app.api:app --port 8000 --reload
+
+# ---- load test
+loadtest: ## 15-min max-rate backfill, numbers go in tests/chaos.md
+	BACKFILL_MONTHS=1 LOADTEST=1 $(PY) -m sim.backfill

@@ -201,3 +201,16 @@ services:
       - ..:/opt/airflow/repo
       - ../data/ivy:/home/airflow/.ivy2
     mem_limit: 4g
+
+  # experiment tracking
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:v2.14.1
+    container_name: rl-mlflow
+    command: >
+      mlflow server --host 0.0.0.0 --port 5000
+      --backend-store-uri sqlite:////mlflow/mlflow.db
+      --artifacts-destination /mlflow/artifacts
+    ports:
+      - "5001:5000"
+    volumes:
+      - ../data/mlflow:/mlflow
