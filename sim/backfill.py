@@ -18,7 +18,10 @@ from sim.producers.common import TOPIC_ONLINE, TOPIC_POS, EmitCounter, make_prod
 from sim.producers.pos import DUP_FLUSH_P, STORE_CLOSE_H, STORE_OPEN_H, draw_delay_s
 from sim.seed import sim_start_date
 
-SEED = 1042  # fixed -> identical backfill on re-run
+# seeds the demand draws, so the same days produce the same units and baskets.
+# event_id is a fresh uuid4 every time though, so re-running does NOT reproduce
+# the same events - silver sees them as new facts. truncate before you replay.
+SEED = 1042
 
 
 def ts_iso(d: date, seconds_into_day: float) -> str:

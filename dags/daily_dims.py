@@ -21,7 +21,7 @@ def reconcile() -> None:
     """fail loudly if gold drifted from silver, counts and amounts must match."""
     from pyspark.sql import SparkSession
 
-    
+
     SPARK = SparkSession.builder.appName("daily_dims").getOrCreate()
 
     spark = SPARK

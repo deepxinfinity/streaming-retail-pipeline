@@ -83,7 +83,25 @@ have been no way to know. That is the argument for building a simulator with kno
 parameters in the first place.
 
 If this were a real pricing system, shipping the optimizer on top of this model would
-be the actual risk. `ml/optimize.py` reads a price response out of a model that has
-barely learned one, so its recommendations are close to "leave the price alone" and
-its expected-margin deltas should not be trusted. That needs option 3 or 4 before it
-means anything.
+be the actual risk, and the first run shows it concretely. Over 47,500 (sku, store)
+pairs:
+
+| | |
+|---|---|
+| recommends a price increase | 57.7% |
+| average recommended change | +$0.13 |
+| predicted volume change | **-0.005 units per pair** |
+| predicted total margin gain | +$9,077 (0.05% of an $18.8M base) |
+
+It raises most prices and predicts that doing so costs essentially no volume. That is
+an implied elasticity near zero, which is the same finding as above seen from the
+other end. With true elasticities of -1.0 to -2.2, those increases would lose real
+volume and the $9,077 would not appear.
+
+The monotone constraint did not save us here. It guarantees predicted demand is
+non-increasing in price, not that it decreases *enough* - and "flat" satisfies
+non-increasing. So raising price always looks like free margin, capped only by the
+10% move guardrail in `pricing_rules.py`.
+
+Treat `gold.ml_price_recommendations` as a demonstration that the pipeline runs
+end to end, not as pricing advice. Needs option 3 or 4 first.

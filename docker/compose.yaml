@@ -113,11 +113,20 @@ services:
     depends_on:
       minio:
         condition: service_healthy
+      postgres:
+        condition: service_healthy
     ports:
       - "8181:8181"
     environment:
       CATALOG_WAREHOUSE: s3://lake/warehouse
       CATALOG_IO__IMPL: org.apache.iceberg.aws.s3.S3FileIO
+      # the default catalog is sqlite in-memory: every container recreate loses
+      # every table registration while the parquet sits untouched in minio.
+      # sqlite on a volume fixes that but SQLITE_BUSY's out under four
+      # concurrent streaming commits, so it goes in postgres instead.
+      CATALOG_URI: jdbc:postgresql://postgres:5432/iceberg
+      CATALOG_JDBC_USER: ${POSTGRES_USER:-postgres}
+      CATALOG_JDBC_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       CATALOG_S3_ENDPOINT: http://minio:9000
       CATALOG_S3_PATH__STYLE__ACCESS: "true"
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-minio}
